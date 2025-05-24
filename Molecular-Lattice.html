@@ -1,0 +1,1219 @@
+<div id="glowscript" class="glowscript">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link type="text/css" href="https://www.glowscript.org/css/redmond/2.1/jquery-ui.custom.css" rel="stylesheet" />
+<link type="text/css" href="https://www.glowscript.org/css/ide.css" rel="stylesheet" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="https://www.glowscript.org/lib/jquery/2.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://www.glowscript.org/lib/jquery/2.1/jquery-ui.custom.min.js"></script>
+<script type="text/javascript" src="https://www.glowscript.org/package/glow.3.2.min.js"></script>
+<script type="text/javascript" src="https://www.glowscript.org/package/RSrun.3.2.min.js"></script>
+<script type="text/javascript"><!--//--><![CDATA[//><!--
+
+// START JAVASCRIPT
+;(function() {;
+var ρσ_modules = {};
+var mouse_1_up, lattice, frozen, quantity_of_nodes, inert, about_me, spring_constant, conserved_energy, loading, engine_running, time_step;
+ρσ_modules.pythonize = {};
+ρσ_modules.random = {};
+
+(function(){
+    function strings() {
+        var string_funcs, exclude, name;
+        string_funcs = set("capitalize strip lstrip rstrip islower isupper isspace lower upper swapcase center count endswith startswith find rfind index rindex format join ljust rjust partition rpartition replace split rsplit splitlines zfill".split(" "));
+        if (!arguments.length) {
+            exclude = (function(){
+                var s = ρσ_set();
+                s.jsset.add("split");
+                s.jsset.add("replace");
+                return s;
+            })();
+        } else if (arguments[0]) {
+            exclude = Array.prototype.slice.call(arguments);
+        } else {
+            exclude = null;
+        }
+        if (exclude) {
+            string_funcs = string_funcs.difference(set(exclude));
+        }
+        var ρσ_Iter0 = string_funcs;
+        ρσ_Iter0 = ((typeof ρσ_Iter0[Symbol.iterator] === "function") ? (ρσ_Iter0 instanceof Map ? ρσ_Iter0.keys() : ρσ_Iter0) : Object.keys(ρσ_Iter0));
+        for (var ρσ_Index0 of ρσ_Iter0) {
+            name = ρσ_Index0;
+            (ρσ_expr_temp = String.prototype)[(typeof name === "number" && name < 0) ? ρσ_expr_temp.length + name : name] = (ρσ_expr_temp = ρσ_str.prototype)[(typeof name === "number" && name < 0) ? ρσ_expr_temp.length + name : name];
+        }
+    };
+    if (!strings.__module__) Object.defineProperties(strings, {
+        __module__ : {value: "pythonize"}
+    });
+
+    ρσ_modules.pythonize.strings = strings;
+})();
+
+(function(){
+    var ρσ_seed_state, ρσ_get_random_byte;
+    ρσ_seed_state = (function(){
+        var ρσ_d = {};
+        ρσ_d["key"] = ρσ_list_decorate([]);
+        ρσ_d["key_i"] = 0;
+        ρσ_d["key_j"] = 0;
+        return ρσ_d;
+    }).call(this);
+    ρσ_get_random_byte = (function() {
+        var ρσ_anonfunc = function () {
+            var ρσ_unpack;
+            ρσ_seed_state.key_i = (ρσ_seed_state.key_i + 1) % 256;
+            ρσ_seed_state.key_j = (ρσ_seed_state.key_j + (ρσ_expr_temp = ρσ_seed_state.key)[ρσ_bound_index(ρσ_seed_state.key_i, ρσ_expr_temp)]) % 256;
+            ρσ_unpack = [(ρσ_expr_temp = ρσ_seed_state.key)[ρσ_bound_index(ρσ_seed_state.key_j, ρσ_expr_temp)], 
+            (ρσ_expr_temp = ρσ_seed_state.key)[ρσ_bound_index(ρσ_seed_state.key_i, ρσ_expr_temp)]];
+            (ρσ_expr_temp = ρσ_seed_state.key)[ρσ_bound_index(ρσ_seed_state.key_i, ρσ_expr_temp)] = ρσ_unpack[0];
+            (ρσ_expr_temp = ρσ_seed_state.key)[ρσ_bound_index(ρσ_seed_state.key_j, ρσ_expr_temp)] = ρσ_unpack[1];
+            return (ρσ_expr_temp = ρσ_seed_state.key)[ρσ_bound_index(((ρσ_expr_temp = ρσ_seed_state.key)[ρσ_bound_index(ρσ_seed_state.key_i, ρσ_expr_temp)] + (ρσ_expr_temp = ρσ_seed_state.key)[ρσ_bound_index(ρσ_seed_state.key_j, ρσ_expr_temp)]) % 256, ρσ_expr_temp)];
+        };
+        if (!ρσ_anonfunc.__module__) Object.defineProperties(ρσ_anonfunc, {
+            __module__ : {value: "random"}
+        });
+        return ρσ_anonfunc;
+    })();
+    function seed() {
+        var x = (arguments[0] === undefined || ( 0 === arguments.length-1 && arguments[arguments.length-1] !== null && typeof arguments[arguments.length-1] === "object" && arguments[arguments.length-1] [ρσ_kwargs_symbol] === true)) ? seed.__defaults__.x : arguments[0];
+        var ρσ_kwargs_obj = arguments[arguments.length-1];
+        if (ρσ_kwargs_obj === null || typeof ρσ_kwargs_obj !== "object" || ρσ_kwargs_obj [ρσ_kwargs_symbol] !== true) ρσ_kwargs_obj = {};
+        if (Object.prototype.hasOwnProperty.call(ρσ_kwargs_obj, "x")){
+            x = ρσ_kwargs_obj.x;
+        }
+        var i, j, ρσ_unpack;
+        ρσ_seed_state.key_i = ρσ_seed_state.key_j = 0;
+        if (typeof x === "number") {
+            x = x.toString();
+        } else if (typeof x !== "string") {
+            throw new TypeError("unhashable type: '" + typeof x + "'");
+        }
+        for (var ρσ_Index1 = 0; ρσ_Index1 < 256; ρσ_Index1++) {
+            i = ρσ_Index1;
+            (ρσ_expr_temp = ρσ_seed_state.key)[(typeof i === "number" && i < 0) ? ρσ_expr_temp.length + i : i] = i;
+        }
+        j = 0;
+        for (var ρσ_Index2 = 0; ρσ_Index2 < 256; ρσ_Index2++) {
+            i = ρσ_Index2;
+            j = (j + (ρσ_expr_temp = ρσ_seed_state.key)[(typeof i === "number" && i < 0) ? ρσ_expr_temp.length + i : i] + x.charCodeAt(i % x.length)) % 256;
+            ρσ_unpack = [(ρσ_expr_temp = ρσ_seed_state.key)[(typeof j === "number" && j < 0) ? ρσ_expr_temp.length + j : j], 
+            (ρσ_expr_temp = ρσ_seed_state.key)[(typeof i === "number" && i < 0) ? ρσ_expr_temp.length + i : i]];
+            (ρσ_expr_temp = ρσ_seed_state.key)[(typeof i === "number" && i < 0) ? ρσ_expr_temp.length + i : i] = ρσ_unpack[0];
+            (ρσ_expr_temp = ρσ_seed_state.key)[(typeof j === "number" && j < 0) ? ρσ_expr_temp.length + j : j] = ρσ_unpack[1];
+        }
+    };
+    if (!seed.__defaults__) Object.defineProperties(seed, {
+        __defaults__ : {value: {x:(new Date).getTime()}},
+        __handles_kwarg_interpolation__ : {value: true},
+        __argnames__ : {value: ["x"]},
+        __module__ : {value: "random"}
+    });
+
+    seed();
+    function random() {
+        var n, m, i;
+        n = 0;
+        m = 1;
+        for (var ρσ_Index3 = 0; ρσ_Index3 < 8; ρσ_Index3++) {
+            i = ρσ_Index3;
+            n += ρσ_get_random_byte() * m;
+            m *= 256;
+        }
+        return n / 0x10000000000000000;
+    };
+    if (!random.__module__) Object.defineProperties(random, {
+        __module__ : {value: "random"}
+    });
+
+    function randrange() {
+        var start, stop, step, width, n;
+        if (arguments.length === 1) {
+            return randbelow(int(arguments[0]));
+        }
+        start = int(arguments[0]);
+        stop = int(arguments[1]);
+        if (arguments.length < 3) {
+            step = 1;
+        } else {
+            step = int(arguments[2]);
+        }
+        width = stop - start;
+        if (step === 1) {
+            if (width > 0) {
+                return start + randbelow(width);
+            }
+            throw new ValueError("empty range for randrange()");
+        }
+        if (step > 0) {
+            n = Math.floor((width + step - 1) / step);
+        } else if (step < 0) {
+            n = Math.floor((width + step + 1) / step);
+        } else {
+            throw new ValueError("zero step for randrange()");
+        }
+        if (n <= 0) {
+            throw new ValueError("empty range in randrange(" + ρσ_str.format("{}", start) + ", " + ρσ_str.format("{}", stop) + ", " + ρσ_str.format("{}", step) + ")");
+        }
+        return start + step * randbelow(n);
+    };
+    if (!randrange.__module__) Object.defineProperties(randrange, {
+        __module__ : {value: "random"}
+    });
+
+    function randint(a, b) {
+        return int(random() * (b - a + 1) + a);
+    };
+    if (!randint.__argnames__) Object.defineProperties(randint, {
+        __argnames__ : {value: ["a", "b"]},
+        __module__ : {value: "random"}
+    });
+
+    function uniform(a, b) {
+        return random() * (b - a) + a;
+    };
+    if (!uniform.__argnames__) Object.defineProperties(uniform, {
+        __argnames__ : {value: ["a", "b"]},
+        __module__ : {value: "random"}
+    });
+
+    function randbelow(n) {
+        return Math.floor(random() * n);
+    };
+    if (!randbelow.__argnames__) Object.defineProperties(randbelow, {
+        __argnames__ : {value: ["n"]},
+        __module__ : {value: "random"}
+    });
+
+    function choice(seq) {
+        if (seq.length > 0) {
+            return seq[ρσ_bound_index(randbelow(seq.length), seq)];
+        } else {
+            throw new IndexError;
+        }
+    };
+    if (!choice.__argnames__) Object.defineProperties(choice, {
+        __argnames__ : {value: ["seq"]},
+        __module__ : {value: "random"}
+    });
+
+    function shuffle() {
+        var x = ( 0 === arguments.length-1 && arguments[arguments.length-1] !== null && typeof arguments[arguments.length-1] === "object" && arguments[arguments.length-1] [ρσ_kwargs_symbol] === true) ? undefined : arguments[0];
+        var random_f = (arguments[1] === undefined || ( 1 === arguments.length-1 && arguments[arguments.length-1] !== null && typeof arguments[arguments.length-1] === "object" && arguments[arguments.length-1] [ρσ_kwargs_symbol] === true)) ? shuffle.__defaults__.random_f : arguments[1];
+        var ρσ_kwargs_obj = arguments[arguments.length-1];
+        if (ρσ_kwargs_obj === null || typeof ρσ_kwargs_obj !== "object" || ρσ_kwargs_obj [ρσ_kwargs_symbol] !== true) ρσ_kwargs_obj = {};
+        if (Object.prototype.hasOwnProperty.call(ρσ_kwargs_obj, "random_f")){
+            random_f = ρσ_kwargs_obj.random_f;
+        }
+        var j, ρσ_unpack, i;
+        for (var ρσ_Index4 = 0; ρσ_Index4 < x.length; ρσ_Index4++) {
+            i = ρσ_Index4;
+            j = Math.floor(random_f() * (i + 1));
+            ρσ_unpack = [x[(typeof j === "number" && j < 0) ? x.length + j : j], x[(typeof i === "number" && i < 0) ? x.length + i : i]];
+            x[(typeof i === "number" && i < 0) ? x.length + i : i] = ρσ_unpack[0];
+            x[(typeof j === "number" && j < 0) ? x.length + j : j] = ρσ_unpack[1];
+        }
+        return x;
+    };
+    if (!shuffle.__defaults__) Object.defineProperties(shuffle, {
+        __defaults__ : {value: {random_f:random}},
+        __handles_kwarg_interpolation__ : {value: true},
+        __argnames__ : {value: ["x", "random_f"]},
+        __module__ : {value: "random"}
+    });
+
+    function sample(population, k) {
+        var x, j, ρσ_unpack, i;
+        x = population.slice();
+        for (var ρσ_Index5 = population.length - 1; ρσ_Index5 > population.length - k - 1; ρσ_Index5-=1) {
+            i = ρσ_Index5;
+            j = Math.floor(random() * (i + 1));
+            ρσ_unpack = [x[(typeof j === "number" && j < 0) ? x.length + j : j], x[(typeof i === "number" && i < 0) ? x.length + i : i]];
+            x[(typeof i === "number" && i < 0) ? x.length + i : i] = ρσ_unpack[0];
+            x[(typeof j === "number" && j < 0) ? x.length + j : j] = ρσ_unpack[1];
+        }
+        return x.slice(population.length - k);
+    };
+    if (!sample.__argnames__) Object.defineProperties(sample, {
+        __argnames__ : {value: ["population", "k"]},
+        __module__ : {value: "random"}
+    });
+
+    ρσ_modules.random.ρσ_seed_state = ρσ_seed_state;
+    ρσ_modules.random.ρσ_get_random_byte = ρσ_get_random_byte;
+    ρσ_modules.random.seed = seed;
+    ρσ_modules.random.random = random;
+    ρσ_modules.random.randrange = randrange;
+    ρσ_modules.random.randint = randint;
+    ρσ_modules.random.uniform = uniform;
+    ρσ_modules.random.randbelow = randbelow;
+    ρσ_modules.random.choice = choice;
+    ρσ_modules.random.shuffle = shuffle;
+    ρσ_modules.random.sample = sample;
+})();
+async function __main__() {
+"use strict";
+    var display = canvas;
+    var scene = canvas();
+
+    function round(num, n=0) {return Number(num.toFixed(n))}
+
+    function input(arg) {
+    	arg = arg || {}
+    	if (arg.prompt !== undefined && arg.prompt != '') return prompt(arg.prompt)
+    	else if (typeof arg === 'string') return prompt(arg)
+    	else return prompt()
+    }
+
+    var version, print, arange, __name__, type, ρσ_ls, scene, about_me, mass, spacing, atom_radius, conserved_energy, spring_constant, restoration_constant, lattice_type, quantity_of_nodes, time_step, update_rate, bfs_like, shuffling_percent, mouse_1_up, engine_running, inert, loading, _GS_1, lattice, lattice_type_menu, node_quantity, reload_button, static_button, caption_clear_button, spring_constant_text, spring_constant_slider, energy_conservation, energy_conservation_slider, traversal_method, traversal_type_slider, generation_randomness, randomness_slider;
+    version = ρσ_list_decorate([ "3.2", "glowscript" ]);
+    Array.prototype['+'] = function(r) {return this.concat(r)}
+    Array.prototype['*'] = function(r) {return __array_times_number(this, r)}
+    window.__GSlang = "vpython";
+    print = GSprint;
+    arange = range;
+    __name__ = "__main__";
+    type = pytype;
+    var strings = ρσ_modules.pythonize.strings;
+
+    strings();
+    var randint = ρσ_modules.random.randint;
+
+    "16";
+    scene = ρσ_interpolate_kwargs.call(this, display, [ρσ_desugar_kwargs({width: 600, height: 580, align: "left"})]);
+    "17";
+    scene.bind("mousedown", move_node);
+    "18";
+    scene.bind("mouseup", release_mouse_1);
+    "49";
+    about_me = "\n            In the scene to the left, a model simulates vibrations in a lattice. Choose from several  \n  pre-designed lattice types using the dropdown labeled <b>'Graphene'<\/b>. You can adjust the number of  \n  nodes (atoms) simulated, but higher values are more computationally expensive. Use <b>'Render: Static'</b>  \n  to visualize thousands of atoms without real-time physics. After any change, press <b>'Reload'</b> and  \n  <b>left-click anywhere</b> in the scene to restart the simulation.\n\n        The lattice starts at rest. You can <b>move any atom by left-clicking and dragging</b> it.  \n  If the vibrations grow too large, reduce energy conservation to cool the system. The default  \n  layout uses a breadth-first search (BFS) to form clustered networks. You can switch to a  \n  depth-first search (DFS) for long, tendril-like chains. A <b>randomness slider</b> adds variability  \n  to direction order. Use <b>middle mouse to zoom</b>, <b>right-click + drag to rotate</b>, and  \n  <b>Shift + left-click + drag to pan</b> the view.\n\n        \\(F = -k x_{dist},\\)     \\(F = ma\\)   \\(\\Rightarrow\\)   \\(a = \\dfrac{-k x_{dist}}{m}\\)  \n            \\(\\Delta v = a \\Delta t\\)   and   \\(\\Delta x = v \\Delta t\\)\n\n        Vibrations are computed using Hooke’s Law. The force between two atoms is based on  \n  the vector \\(x_{dist}\\), and integrated via Newton’s Second Law using a forward Euler method.  \n  To mimic sheer forces tangential to a spring, I am storing the original distance vector between\n  two nodes and comparing any changes in distance to this original value. This gives the network \n  stiffness and avoids whole-lattice rotation (and internal collapse into a chaotic ball). This\n  simplification improves performance without major physical compromise.\n\n        I'm open to implementing new lattice types—reach out if you're interested! The current  \n  algorithm uses shared tileable vectors for all nodes, which complicates patterns like Einstein shapes.\n\n        -<i>Created by Maximillian DeMarr</i>\n";
+    "51";
+    scene.caption = about_me;
+    "52";
+    MathJax.Hub.Queue(ρσ_list_decorate([ "Typeset", MathJax.Hub, scene.caption ]));
+    "62";
+    async function lattice_directions(type) {
+        var ρσ_ls, A, diamond_directions, i, triangular_directions, B, C;
+        "85";
+        if ((type === "Graphene" || typeof type === "object" && ρσ_equals(type, "Graphene"))) {
+            "86";
+            return ρσ_list_decorate([ vec(sqrt(3)["/"](2), 1["/"](2), 0), vec(1["-u"]()["*"](sqrt(3))["/"](2), 1["/"](2), 0), vec(0, 1["-u"]()["*"](1), 0) ]);
+            "88";
+        } else if ((type === "Diamond" || typeof type === "object" && ρσ_equals(type, "Diamond"))) {
+            "89";
+            A = vec(0, 1, 0);
+            "90";
+            diamond_directions = ρσ_list_decorate([ A ]);
+            "91";
+            A = ρσ_interpolate_kwargs.call(this, rotate, [A].concat([ρσ_desugar_kwargs({axis: vec(1, 0, 0), angle: (await radians(109.5))})]));
+            "92";
+            diamond_directions.append(A);
+            "93";
+            for (var ρσ_Index6 = 0; ρσ_Index6["<"](3); ρσ_Index6++) {
+                i = ρσ_Index6;
+                "94";
+                A = ρσ_interpolate_kwargs.call(this, rotate, [A].concat([ρσ_desugar_kwargs({axis: vec(0, 1, 0), angle: (await radians(120))})]));
+                "95";
+                diamond_directions.append(A);
+            }
+            "96";
+            return diamond_directions;
+            "98";
+        } else if ((type === "Triangular 2D" || typeof type === "object" && ρσ_equals(type, "Triangular 2D"))) {
+            "99";
+            A = vec(0, 1, 0);
+            "100";
+            triangular_directions = ρσ_list_decorate([ A ]);
+            "101";
+            for (var ρσ_Index7 = 0; ρσ_Index7["<"](6); ρσ_Index7++) {
+                i = ρσ_Index7;
+                "102";
+                A = ρσ_interpolate_kwargs.call(this, rotate, [A].concat([ρσ_desugar_kwargs({axis: vec(0, 0, 1), angle: (await radians(360["/"](6)))})]));
+                "103";
+                triangular_directions.append(vec(round(A.x, 5), round(A.y, 5), round(A.z, 5)));
+            }
+            "104";
+            return triangular_directions;
+            "106";
+        } else if ((type === "Triangular 3D" || typeof type === "object" && ρσ_equals(type, "Triangular 3D"))) {
+            "107";
+            A = vec(1, 0, 0);
+            "108";
+            B = vec(1["/"](2), sqrt(3)["/"](2), 0);
+            "109";
+            C = vec(1["/"](2), 1["/"](4["*"](sqrt(3))), sqrt(3)["/"](2));
+            "110";
+            return ρσ_list_decorate([ A, B, C, 1["-u"]()["*"](A), 1["-u"]()["*"](B), 1["-u"]()["*"](C) ]);
+            "112";
+        } else if ((type === "Grid 2D" || typeof type === "object" && ρσ_equals(type, "Grid 2D"))) {
+            "113";
+            return ρσ_list_decorate([ vec(1, 0, 0), vec(0, 1, 0), vec(1["-u"]()["*"](1), 0, 0), vec(0, 1["-u"]()["*"](1), 0) ]);
+            "115";
+        } else if ((type === "Grid 3D" || typeof type === "object" && ρσ_equals(type, "Grid 3D"))) {
+            "116";
+            return ρσ_list_decorate([ vec(1, 0, 0), vec(0, 1, 0), vec(1["-u"]()["*"](1), 0, 0), vec(0, 1["-u"]()["*"](1), 0), vec(0, 0, 1), vec(0, 0, 1["-u"]()["*"](1)) ]);
+            "118";
+        } else {
+            "119";
+            return "'Type' Error?";
+        }
+    };
+    if (!lattice_directions.__argnames__) Object.defineProperties(lattice_directions, {
+        __argnames__ : {value: ["type"]},
+        __module__ : {value: null}
+    });
+
+    "122";
+    async function shuffle_list(directions) {
+        var ρσ_ls, j, element_i, element_j, i;
+        "139";
+        var ρσ_Iter8 = range(len(directions)["-"](1["*"](1)), 0, 1["-u"]()["*"](1));
+        ρσ_Iter8 = ((typeof ρσ_Iter8[Symbol.iterator] === "function") ? (ρσ_Iter8 instanceof Map ? ρσ_Iter8.keys() : ρσ_Iter8) : Object.keys(ρσ_Iter8));
+        for (var ρσ_Index8 of ρσ_Iter8) {
+            i = ρσ_Index8;
+            "141";
+            j = (await randint(0, i));
+            "144";
+            element_i = ρσ_getitem(directions, i);
+            "145";
+            element_j = ρσ_getitem(directions, j);
+            "146";
+            ρσ_setitem(directions, i, element_j);
+            "147";
+            ρσ_setitem(directions, j, element_i);
+        }
+        "148";
+        return directions;
+    };
+    if (!shuffle_list.__argnames__) Object.defineProperties(shuffle_list, {
+        __argnames__ : {value: ["directions"]},
+        __module__ : {value: null}
+    });
+
+    "156";
+    async function move_node(evt) {
+        var ρσ_ls, hit, plane_point, ρσ_unpack, neighbor, edge;
+        "168";
+        "169";
+        mouse_1_up = false;
+        "170";
+        hit = scene.mouse.pick();
+        "172";
+        if (ρσ_instanceof(hit, simple_sphere)) {
+            "173";
+            plane_point = hit.pos;
+            "175";
+            while (true) {
+                "176";
+                (await rate(60));
+                "177";
+                if (mouse_1_up) {
+                    "178";
+                    break;
+                }
+                "180";
+                hit.pos = ρσ_interpolate_kwargs.call(scene.mouse, scene.mouse.project, [ρσ_desugar_kwargs({normal: scene.forward, point: plane_point})]);
+                "181";
+                hit.velocity = vec(0, 0, 0);
+                "184";
+                var ρσ_Iter9 = hit.edges.items();
+                ρσ_Iter9 = ((typeof ρσ_Iter9[Symbol.iterator] === "function") ? (ρσ_Iter9 instanceof Map ? ρσ_Iter9.keys() : ρσ_Iter9) : Object.keys(ρσ_Iter9));
+                for (var ρσ_Index9 of ρσ_Iter9) {
+                    ρσ_unpack = ρσ_Index9;
+                    neighbor = ρσ_unpack[0];
+                    edge = ρσ_unpack[1];
+                    "185";
+                    if (ρσ_in(neighbor, hit.children)) {
+                        "186";
+                        edge.pos = hit.pos;
+                        "187";
+                        edge.axis = neighbor.pos["-"](1["*"](hit.pos));
+                        "188";
+                    } else {
+                        "189";
+                        edge.axis = hit.pos["-"](1["*"](neighbor.pos));
+                    }
+                }
+            }
+        }
+    };
+    if (!move_node.__argnames__) Object.defineProperties(move_node, {
+        __argnames__ : {value: ["evt"]},
+        __module__ : {value: null}
+    });
+
+    "192";
+    async function release_mouse_1(evt) {
+        "202";
+        "203";
+        mouse_1_up = true;
+    };
+    if (!release_mouse_1.__argnames__) Object.defineProperties(release_mouse_1, {
+        __argnames__ : {value: ["evt"]},
+        __module__ : {value: null}
+    });
+
+    "206";
+    async function lattice_selection(evt) {
+        "214";
+        "215";
+        lattice.directions = (await lattice_directions(evt.selected));
+    };
+    if (!lattice_selection.__argnames__) Object.defineProperties(lattice_selection, {
+        __argnames__ : {value: ["evt"]},
+        __module__ : {value: null}
+    });
+
+    "218";
+    async function change_number_of_nodes(evt) {
+        "228";
+        "229";
+        if (evt.number[">"](500) && !frozen) {
+            "230";
+            print("Warning:\nMore than 500 nodes results in horrible performance. Consider toggling 'Static' and rerendering.");
+        }
+        "231";
+        quantity_of_nodes = evt.number;
+    };
+    if (!change_number_of_nodes.__argnames__) Object.defineProperties(change_number_of_nodes, {
+        __argnames__ : {value: ["evt"]},
+        __module__ : {value: null}
+    });
+
+    "234";
+    async function static_render(evt) {
+        "244";
+        "245";
+        inert = !inert;
+        "246";
+        static_button.text = (inert) ? "Render: Static" : "Render: Dynamic";
+    };
+    if (!static_render.__argnames__) Object.defineProperties(static_render, {
+        __argnames__ : {value: ["evt"]},
+        __module__ : {value: null}
+    });
+
+    "249";
+    async function about_me_toggle(evt) {
+        "260";
+        "261";
+        if (evt.background.equals(vec(.8, .8, .8))) {
+            "262";
+            evt.background = color.white;
+            "263";
+            scene.caption = "";
+            "264";
+            scene.width = 1300;
+            "265";
+        } else {
+            "266";
+            evt.background = vec(.8, .8, .8);
+            "267";
+            scene.width = 600;
+            "268";
+            scene.caption = about_me;
+            "269";
+            MathJax.Hub.Queue(ρσ_list_decorate([ "Typeset", MathJax.Hub, scene.caption ]));
+        }
+    };
+    if (!about_me_toggle.__argnames__) Object.defineProperties(about_me_toggle, {
+        __argnames__ : {value: ["evt"]},
+        __module__ : {value: null}
+    });
+
+    "272";
+    async function spring_constant_slide(slide) {
+        "282";
+        "283";
+        spring_constant_text.text = "Spring Constant: "["+"](ρσ_str.format("{:5.f}", slide.value))["+"]("");
+        "284";
+        spring_constant = slide.value;
+    };
+    if (!spring_constant_slide.__argnames__) Object.defineProperties(spring_constant_slide, {
+        __argnames__ : {value: ["slide"]},
+        __module__ : {value: null}
+    });
+
+    "287";
+    async function energy_conservation_slide(slide) {
+        "297";
+        "298";
+        energy_conservation.text = "Energy Conservation: "["+"](ρσ_str.format("{:3.2f}", slide.value))["+"]("%");
+        "299";
+        conserved_energy = slide.value["/"](100);
+    };
+    if (!energy_conservation_slide.__argnames__) Object.defineProperties(energy_conservation_slide, {
+        __argnames__ : {value: ["slide"]},
+        __module__ : {value: null}
+    });
+
+    "302";
+    async function traversal_type_slide(slide) {
+        "312";
+        "313";
+        traversal_method.text = "Graph Traversal Method: DFS = "["+"](ρσ_str.format("{:3.0f}", 100["-"](slide.value)))["+"]("% | BFS = ")["+"](ρσ_str.format("{:3.0f}", slide.value))["+"]("%");
+        "314";
+        lattice.generation_modifier = slide.value["/"](100);
+    };
+    if (!traversal_type_slide.__argnames__) Object.defineProperties(traversal_type_slide, {
+        __argnames__ : {value: ["slide"]},
+        __module__ : {value: null}
+    });
+
+    "317";
+    async function randomness_slide(slide) {
+        "327";
+        "328";
+        generation_randomness.text = "Graph Randomness: "["+"](ρσ_str.format("{:3.0f}", slide.value))["+"]("%");
+        "329";
+        lattice.shuffle_modifier = slide.value;
+    };
+    if (!randomness_slide.__argnames__) Object.defineProperties(randomness_slide, {
+        __argnames__ : {value: ["slide"]},
+        __module__ : {value: null}
+    });
+
+    "332";
+    async function reload_lattice(evt) {
+        "342";
+        "343";
+        if (!loading) {
+            "344";
+            loading = true;
+            "345";
+            (await load_it());
+            "346";
+        } else {
+            "347";
+            print("Please wait for scene to reload (need to click anywhere in scene).");
+        }
+    };
+    if (!reload_lattice.__argnames__) Object.defineProperties(reload_lattice, {
+        __argnames__ : {value: ["evt"]},
+        __module__ : {value: null}
+    });
+
+    "357";
+    function Node() {;
+    }
+    Node.prototype.__init__ = async function __init__(position) {
+        var self = this;
+        "373";
+        self.obj = ρσ_interpolate_kwargs.call(this, simple_sphere, [ρσ_desugar_kwargs({pos: position, color: color.red, radius: atom_radius})]);
+        "374";
+        self.obj.velocity = vec(0, 0, 0);
+        "375";
+        self.obj.edges = ρσ_dict();
+        "376";
+        self.obj.children = ρσ_dict();
+    };
+    if (!Node.prototype.__init__.__argnames__) Object.defineProperties(Node.prototype.__init__, {
+        __argnames__ : {value: ["position"]},
+        __module__ : {value: null}
+    });
+    Node.__argnames__ = Node.prototype.__init__.__argnames__;
+    Node.__handles_kwarg_interpolation__ = Node.prototype.__init__.__handles_kwarg_interpolation__;
+    Node.prototype.__repr__ = async function __repr__() {
+                return "<"["+"](__name__)["+"](".")["+"](this.constructor.name)["+"](" #")["+"](this.ρσ_object_id)["+"](">");
+    };
+    Node.prototype.__str__ = async function __str__() {
+        return this.__repr__();
+    };
+    Object.defineProperty(Node.prototype, "__bases__", {value: []});
+    
+
+    "379";
+    function Edge() {;
+    }
+    Edge.prototype.__init__ = async function __init__() {
+        var self = this;
+        var node_1 = ( 0 === arguments.length["-"](1) && arguments[arguments.length["-"](1)] !== null && typeof arguments[arguments.length["-"](1)] === "object" && arguments[arguments.length["-"](1)] [ρσ_kwargs_symbol] === true) ? undefined : arguments[0];
+        var node_2 = ( 1 === arguments.length["-"](1) && arguments[arguments.length["-"](1)] !== null && typeof arguments[arguments.length["-"](1)] === "object" && arguments[arguments.length["-"](1)] [ρσ_kwargs_symbol] === true) ? undefined : arguments[1];
+        var edge = (arguments[2] === undefined || ( 2 === arguments.length["-"](1) && arguments[arguments.length["-"](1)] !== null && typeof arguments[arguments.length["-"](1)] === "object" && arguments[arguments.length["-"](1)] [ρσ_kwargs_symbol] === true)) ? __init__.__defaults__.edge : arguments[2];
+        var ρσ_kwargs_obj = arguments[arguments.length["-"](1)];
+        if (ρσ_kwargs_obj === null || typeof ρσ_kwargs_obj !== "object" || ρσ_kwargs_obj [ρσ_kwargs_symbol] !== true) ρσ_kwargs_obj = {};
+        if (Object.prototype.hasOwnProperty.call(ρσ_kwargs_obj, "edge")){
+            edge = ρσ_kwargs_obj.edge;
+        }
+        "393";
+        if (edge) {
+            "394";
+            edge.pos = node_1.pos;
+            "395";
+            edge.axis = node_2.pos["-"](1["*"](node_1.pos));
+            "396";
+            edge.initial_vec = node_2.pos["-"](1["*"](node_1.pos));
+            "397";
+            edge.visible = true;
+            "398";
+        } else {
+            "399";
+            edge = ρσ_interpolate_kwargs.call(this, cylinder, [ρσ_desugar_kwargs({pos: node_1.pos, axis: node_2.pos["-"](1["*"](node_1.pos)), color: color.white, radius: node_1.radius["/"](4), initial_vec: node_2.pos["-"](1["*"](node_1.pos))})]);
+        }
+        "401";
+        ρσ_setitem(node_1.edges, node_2, edge);
+        "402";
+        ρσ_setitem(node_1.children, node_2, edge);
+        "403";
+        ρσ_setitem(node_2.edges, node_1, edge);
+    };
+    if (!Edge.prototype.__init__.__defaults__) Object.defineProperties(Edge.prototype.__init__, {
+        __defaults__ : {value: {edge:null}},
+        __handles_kwarg_interpolation__ : {value: true},
+        __argnames__ : {value: ["node_1", "node_2", "edge"]},
+        __module__ : {value: null}
+    });
+    Edge.__argnames__ = Edge.prototype.__init__.__argnames__;
+    Edge.__handles_kwarg_interpolation__ = Edge.prototype.__init__.__handles_kwarg_interpolation__;
+    Edge.prototype.__repr__ = async function __repr__() {
+                return "<"["+"](__name__)["+"](".")["+"](this.constructor.name)["+"](" #")["+"](this.ρσ_object_id)["+"](">");
+    };
+    Edge.prototype.__str__ = async function __str__() {
+        return this.__repr__();
+    };
+    Object.defineProperty(Edge.prototype, "__bases__", {value: []});
+    
+
+    "406";
+    function Queue() {;
+    }
+    Queue.prototype.__init__ = async function __init__() {
+        var self = this;
+        var behavior_modifier = (arguments[0] === undefined || ( 0 === arguments.length["-"](1) && arguments[arguments.length["-"](1)] !== null && typeof arguments[arguments.length["-"](1)] === "object" && arguments[arguments.length["-"](1)] [ρσ_kwargs_symbol] === true)) ? __init__.__defaults__.behavior_modifier : arguments[0];
+        var ρσ_kwargs_obj = arguments[arguments.length["-"](1)];
+        if (ρσ_kwargs_obj === null || typeof ρσ_kwargs_obj !== "object" || ρσ_kwargs_obj [ρσ_kwargs_symbol] !== true) ρσ_kwargs_obj = {};
+        if (Object.prototype.hasOwnProperty.call(ρσ_kwargs_obj, "behavior_modifier")){
+            behavior_modifier = ρσ_kwargs_obj.behavior_modifier;
+        }
+        "424";
+        self.items = ρσ_list_decorate([]);
+        "425";
+        self.behavior_modifier = behavior_modifier;
+    };
+    if (!Queue.prototype.__init__.__defaults__) Object.defineProperties(Queue.prototype.__init__, {
+        __defaults__ : {value: {behavior_modifier:1}},
+        __handles_kwarg_interpolation__ : {value: true},
+        __argnames__ : {value: ["behavior_modifier"]},
+        __module__ : {value: null}
+    });
+    Queue.__argnames__ = Queue.prototype.__init__.__argnames__;
+    Queue.__handles_kwarg_interpolation__ = Queue.prototype.__init__.__handles_kwarg_interpolation__;
+    Queue.prototype.enqueue = async function enqueue(item) {
+        var self = this;
+        "434";
+        self.items.append(item);
+    };
+    if (!Queue.prototype.enqueue.__argnames__) Object.defineProperties(Queue.prototype.enqueue, {
+        __argnames__ : {value: ["item"]},
+        __module__ : {value: null}
+    });
+    Queue.prototype.dequeue = async function dequeue() {
+        var self = this;
+        var ρσ_ls, index;
+        "452";
+        index = (self.behavior_modifier["<"](1)) ? 1["-u"]()["*"](1)["*"](round(Math.pow(random(), (self.behavior_modifier["*"](2))))) : 0;
+        "454";
+        if (!((await self.is_empty()))) {
+            "455";
+            return self.items.pypop(index);
+        }
+        "456";
+        throw new (await IndexError("dequeue from empty queue"));
+    };
+    if (!Queue.prototype.dequeue.__module__) Object.defineProperties(Queue.prototype.dequeue, {
+        __module__ : {value: null}
+    });
+    Queue.prototype.is_empty = async function is_empty() {
+        var self = this;
+        "465";
+        return ρσ_equals(len(self.items), 0);
+    };
+    if (!Queue.prototype.is_empty.__module__) Object.defineProperties(Queue.prototype.is_empty, {
+        __module__ : {value: null}
+    });
+    Queue.prototype.__repr__ = async function __repr__() {
+                return "<"["+"](__name__)["+"](".")["+"](this.constructor.name)["+"](" #")["+"](this.ρσ_object_id)["+"](">");
+    };
+    Queue.prototype.__str__ = async function __str__() {
+        return this.__repr__();
+    };
+    Object.defineProperty(Queue.prototype, "__bases__", {value: []});
+    
+    
+    
+    
+
+    "468";
+    function Lattice() {;
+    }
+    Lattice.prototype.__init__ = async function __init__() {
+        var self = this;
+        var directions = (arguments[0] === undefined || ( 0 === arguments.length["-"](1) && arguments[arguments.length["-"](1)] !== null && typeof arguments[arguments.length["-"](1)] === "object" && arguments[arguments.length["-"](1)] [ρσ_kwargs_symbol] === true)) ? __init__.__defaults__.directions : arguments[0];
+        var generation_modifier = (arguments[1] === undefined || ( 1 === arguments.length["-"](1) && arguments[arguments.length["-"](1)] !== null && typeof arguments[arguments.length["-"](1)] === "object" && arguments[arguments.length["-"](1)] [ρσ_kwargs_symbol] === true)) ? __init__.__defaults__.generation_modifier : arguments[1];
+        var shuffle_modifier = (arguments[2] === undefined || ( 2 === arguments.length["-"](1) && arguments[arguments.length["-"](1)] !== null && typeof arguments[arguments.length["-"](1)] === "object" && arguments[arguments.length["-"](1)] [ρσ_kwargs_symbol] === true)) ? __init__.__defaults__.shuffle_modifier : arguments[2];
+        var ρσ_kwargs_obj = arguments[arguments.length["-"](1)];
+        if (ρσ_kwargs_obj === null || typeof ρσ_kwargs_obj !== "object" || ρσ_kwargs_obj [ρσ_kwargs_symbol] !== true) ρσ_kwargs_obj = {};
+        if (Object.prototype.hasOwnProperty.call(ρσ_kwargs_obj, "directions")){
+            directions = ρσ_kwargs_obj.directions;
+        }
+        if (Object.prototype.hasOwnProperty.call(ρσ_kwargs_obj, "generation_modifier")){
+            generation_modifier = ρσ_kwargs_obj.generation_modifier;
+        }
+        if (Object.prototype.hasOwnProperty.call(ρσ_kwargs_obj, "shuffle_modifier")){
+            shuffle_modifier = ρσ_kwargs_obj.shuffle_modifier;
+        }
+        var ρσ_ls, axis;
+        "501";
+        if (directions === null) {
+            "502";
+            directions = ρσ_list_decorate([ vec(sqrt(3)["/"](2), 1["/"](2), 0), vec(1["-u"]()["*"](sqrt(3))["/"](2), 1["/"](2), 0), vec(0, 1["-u"]()["*"](1), 0) ]);
+        }
+        "503";
+        self.directions = (function() {
+            var ρσ_Iter = directions, ρσ_Result = [], axis;
+            ρσ_Iter = ((typeof ρσ_Iter[Symbol.iterator] === "function") ? (ρσ_Iter instanceof Map ? ρσ_Iter.keys() : ρσ_Iter) : Object.keys(ρσ_Iter));
+            for (var ρσ_Index of ρσ_Iter) {
+                axis = ρσ_Index;
+                ρσ_Result.push(axis["*"](spacing));
+            }
+            ρσ_Result = ρσ_list_constructor(ρσ_Result);
+            return ρσ_Result;
+        })();
+        "504";
+        self.generation_modifier = generation_modifier;
+        "505";
+        self.shuffle_modifier = shuffle_modifier;
+        "506";
+        self.origin = null;
+        "507";
+        self.dead_edges = ρσ_list_decorate([]);
+        "508";
+        self.web = ρσ_list_decorate([]);
+    };
+    if (!Lattice.prototype.__init__.__defaults__) Object.defineProperties(Lattice.prototype.__init__, {
+        __defaults__ : {value: {directions:null, generation_modifier:1, shuffle_modifier:0}},
+        __handles_kwarg_interpolation__ : {value: true},
+        __argnames__ : {value: ["directions", "generation_modifier", "shuffle_modifier"]},
+        __module__ : {value: null}
+    });
+    Lattice.__argnames__ = Lattice.prototype.__init__.__argnames__;
+    Lattice.__handles_kwarg_interpolation__ = Lattice.prototype.__init__.__handles_kwarg_interpolation__;
+    Lattice.prototype.add_node = async function add_node(node) {
+        var self = this;
+        "517";
+        self.web.append(node);
+    };
+    if (!Lattice.prototype.add_node.__argnames__) Object.defineProperties(Lattice.prototype.add_node, {
+        __argnames__ : {value: ["node"]},
+        __module__ : {value: null}
+    });
+    Lattice.prototype.connect_nodes = async function connect_nodes(node_1, node_2) {
+        var self = this;
+        var ρσ_ls, edge_to_recycle, _GS_1;
+        "529";
+        edge_to_recycle = (len(self.dead_edges)[">"](0)) ? self.dead_edges.pypop() : null;
+        "530";
+        _GS_1 = new Edge;
+        (await _GS_1.__init__(node_1, node_2, edge_to_recycle));
+        _GS_1;
+    };
+    if (!Lattice.prototype.connect_nodes.__argnames__) Object.defineProperties(Lattice.prototype.connect_nodes, {
+        __argnames__ : {value: ["node_1", "node_2"]},
+        __module__ : {value: null}
+    });
+    Lattice.prototype.generate_nodes = async function generate_nodes(n) {
+        var self = this;
+        var ρσ_ls, nodes_to_recycle, _GS_1, queue, visited, node, ρσ_unpack, flip, next_position, blurred_position, next_node, direction;
+        "540";
+        nodes_to_recycle = (len(self.web)[">"](0)) ? (await self.__splice_web(n)) : ρσ_list_decorate([]);
+        "541";
+        _GS_1 = new Queue;
+        (await _GS_1.__init__(self.generation_modifier));
+        queue = _GS_1;
+        "542";
+        visited = ρσ_dict();
+        "545";
+        if (ρσ_equals(nodes_to_recycle, ρσ_list_decorate([]))) {
+            "546";
+            _GS_1 = new Node;
+            (await _GS_1.__init__(vec(0, 0, 0)));
+            node = _GS_1.obj;
+            "547";
+        } else {
+            "548";
+            node = nodes_to_recycle.pypop(0);
+            "549";
+            (await self.__reset_node(node, vec(0, 0, 0)));
+        }
+        "551";
+        self.origin = node;
+        "552";
+        (await self.add_node(node));
+        "553";
+        (await queue.enqueue([node, 1]));
+        "554";
+        ρσ_setitem(visited, str(node.pos), node);
+        "556";
+        while (!((await queue.is_empty())) && len(self.web)["<"](n)) {
+            "557";
+            ρσ_unpack = (await queue.dequeue());
+ρσ_unpack = ρσ_unpack_asarray(2, ρσ_unpack);
+            node = ρσ_unpack[0];
+            flip = ρσ_unpack[1];
+            "560";
+            if (self.shuffle_modifier && random()["<"](self.shuffle_modifier)) {
+                "561";
+                self.directions = (await shuffle_list(self.directions));
+            }
+            "563";
+            var ρσ_Iter10 = self.directions;
+            ρσ_Iter10 = ((typeof ρσ_Iter10[Symbol.iterator] === "function") ? (ρσ_Iter10 instanceof Map ? ρσ_Iter10.keys() : ρσ_Iter10) : Object.keys(ρσ_Iter10));
+            for (var ρσ_Index10 of ρσ_Iter10) {
+                direction = ρσ_Index10;
+                "564";
+                next_position = vec(node.pos.x["+"](direction.x["*"](flip)), node.pos.y["+"](direction.y["*"](flip)), node.pos.z["+"](direction.z["*"](flip)));
+                "565";
+                blurred_position = vec(round(next_position.x, 5), round(next_position.y, 5), round(next_position.z, 5));
+                "Check if this blurred position exists as a key in the visited dict. If the next node has already been visited,\n                then we check to add a bond between the nodes. ";
+                "569";
+                if (!ρσ_in(str(blurred_position), visited)) {
+                    "570";
+                    if (ρσ_equals(nodes_to_recycle, ρσ_list_decorate([]))) {
+                        "571";
+                        _GS_1 = new Node;
+                        (await _GS_1.__init__(next_position));
+                        next_node = _GS_1.obj;
+                        "572";
+                    } else {
+                        "573";
+                        next_node = nodes_to_recycle.pypop(0);
+                        "574";
+                        (await self.__reset_node(next_node, next_position));
+                    }
+                    "576";
+                    (await self.connect_nodes(node, next_node));
+                    "577";
+                    (await self.add_node(next_node));
+                    "578";
+                    ρσ_setitem(visited, str(blurred_position), next_node);
+                    "579";
+                    (await queue.enqueue([next_node, 1["-u"]()["*"](flip)]));
+                    "580";
+                    if (len(self.web)[">="](n)) {
+                        "581";
+                        break;
+                        "582";
+                    }
+                } else if (!ρσ_in(visited.get(str(blurred_position)), node.edges)) {
+                    "583";
+                    (await self.connect_nodes(node, visited.get(str(blurred_position))));
+                }
+            }
+        }
+    };
+    if (!Lattice.prototype.generate_nodes.__argnames__) Object.defineProperties(Lattice.prototype.generate_nodes, {
+        __argnames__ : {value: ["n"]},
+        __module__ : {value: null}
+    });
+    Lattice.prototype.__splice_web = async function __splice_web(n) {
+        var self = this;
+        var ρσ_ls, nodes_to_rewrite, nodes_to_delete;
+        "596";
+        nodes_to_rewrite = (len(self.web)[">"](n)) ? self.web.slice(0, 1["-u"]()["*"](len(self.web)["-"](1["*"](n)))) : self.web.slice(0);
+        "597";
+        nodes_to_delete = self.web.slice(len(nodes_to_rewrite));
+        "598";
+        (await self.__delete_nodes(nodes_to_delete));
+        "599";
+        self.web = ρσ_list_decorate([]);
+        "600";
+        return nodes_to_rewrite;
+    };
+    if (!Lattice.prototype.__splice_web.__argnames__) Object.defineProperties(Lattice.prototype.__splice_web, {
+        __argnames__ : {value: ["n"]},
+        __module__ : {value: null}
+    });
+    Lattice.prototype.__delete_nodes = async function __delete_nodes(nodes_to_delete) {
+        var self = this;
+        var ρσ_ls, node;
+        "610";
+        var ρσ_Iter11 = nodes_to_delete;
+        ρσ_Iter11 = ((typeof ρσ_Iter11[Symbol.iterator] === "function") ? (ρσ_Iter11 instanceof Map ? ρσ_Iter11.keys() : ρσ_Iter11) : Object.keys(ρσ_Iter11));
+        for (var ρσ_Index11 of ρσ_Iter11) {
+            node = ρσ_Index11;
+            "611";
+            node.pos = vec(0, 0, 0);
+            "612";
+            node.velocity = vec(0, 0, 0);
+            "613";
+            node.visible = false;
+            "614";
+            (await self.__reset_edges(node));
+        }
+    };
+    if (!Lattice.prototype.__delete_nodes.__argnames__) Object.defineProperties(Lattice.prototype.__delete_nodes, {
+        __argnames__ : {value: ["nodes_to_delete"]},
+        __module__ : {value: null}
+    });
+    Lattice.prototype.__reset_node = async function __reset_node(node, position) {
+        var self = this;
+        "624";
+        node.pos = position;
+        "625";
+        node.velocity = vec(0, 0, 0);
+        "626";
+        node.visible = true;
+        "627";
+        (await self.__reset_edges(node));
+    };
+    if (!Lattice.prototype.__reset_node.__argnames__) Object.defineProperties(Lattice.prototype.__reset_node, {
+        __argnames__ : {value: ["node", "position"]},
+        __module__ : {value: null}
+    });
+    Lattice.prototype.__reset_edges = async function __reset_edges(node) {
+        var self = this;
+        var ρσ_ls, ρσ_unpack, child, edge;
+        "636";
+        var ρσ_Iter12 = node.children.items();
+        ρσ_Iter12 = ((typeof ρσ_Iter12[Symbol.iterator] === "function") ? (ρσ_Iter12 instanceof Map ? ρσ_Iter12.keys() : ρσ_Iter12) : Object.keys(ρσ_Iter12));
+        for (var ρσ_Index12 of ρσ_Iter12) {
+            ρσ_unpack = ρσ_Index12;
+            child = ρσ_unpack[0];
+            edge = ρσ_unpack[1];
+            "637";
+            edge.visible = false;
+            "638";
+            self.dead_edges.append(edge);
+        }
+        "639";
+        node.edges = ρσ_dict();
+        "640";
+        node.children = ρσ_dict();
+    };
+    if (!Lattice.prototype.__reset_edges.__argnames__) Object.defineProperties(Lattice.prototype.__reset_edges, {
+        __argnames__ : {value: ["node"]},
+        __module__ : {value: null}
+    });
+    Lattice.prototype.__str__ = async function __str__() {
+        var self = this;
+        "649";
+        return "HexGrid with "["+"](ρσ_str.format("{}", len(self.web)))["+"](" nodes.");
+    };
+    if (!Lattice.prototype.__str__.__module__) Object.defineProperties(Lattice.prototype.__str__, {
+        __module__ : {value: null}
+    });
+    Lattice.prototype.__repr__ = async function __repr__() {
+                return "<"["+"](__name__)["+"](".")["+"](this.constructor.name)["+"](" #")["+"](this.ρσ_object_id)["+"](">");
+    };
+    Object.defineProperty(Lattice.prototype, "__bases__", {value: []});
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    "652";
+    async function load_it() {
+        "654";
+        "656";
+        reload_button.text = "Loading";
+        "657";
+        engine_running = false;
+        "658";
+        (await sleep(.05));
+        "660";
+        (await lattice.generate_nodes(quantity_of_nodes));
+        "661";
+        ρσ_interpolate_kwargs.call(this, print_options, [ρσ_desugar_kwargs({clear: true})]);
+        "662";
+        reload_button.text = "Loaded ";
+        "663";
+        print("Waiting for user to click anywhere in scene...");
+        "664";
+        (await scene.waitfor("click"));
+        "666";
+        ρσ_interpolate_kwargs.call(this, print_options, [ρσ_desugar_kwargs({clear: true})]);
+        "667";
+        print("Running and clicked :)");
+        "668";
+        engine_running = !inert;
+        "669";
+        (await sleep(.01));
+        "670";
+        loading = false;
+        "671";
+        reload_button.text = "Reload ";
+        "672";
+        (await main());
+    };
+    if (!load_it.__module__) Object.defineProperties(load_it, {
+        __module__ : {value: null}
+    });
+
+    "682";
+    mass = 1;
+    "683";
+    spacing = 1;
+    "684";
+    atom_radius = .25;
+    "685";
+    conserved_energy = 1;
+    "686";
+    spring_constant = 1e3;
+    "687";
+    restoration_constant = .3;
+    "689";
+    lattice_type = "Graphene";
+    "690";
+    quantity_of_nodes = 40;
+    "691";
+    time_step = 5e-4;
+    "692";
+    update_rate = 1["/"](time_step);
+    "694";
+    bfs_like = 1;
+    "695";
+    shuffling_percent = 0;
+    "697";
+    mouse_1_up = true;
+    "698";
+    engine_running = true;
+    "699";
+    inert = false;
+    "700";
+    loading = false;
+    "702";
+    _GS_1 = new Lattice;
+    (await _GS_1.__init__());
+    lattice = _GS_1;
+    "703";
+    (await lattice.generate_nodes(quantity_of_nodes));
+    "713";
+    lattice_type_menu = ρσ_interpolate_kwargs.call(this, menu, [ρσ_desugar_kwargs({bind: lattice_selection, choices: ρσ_list_decorate([ "Graphene", "Diamond", "Triangular 2D", "Triangular 3D", "Grid 2D", "Grid 3D" ]), selected: lattice_type, index: 0, pos: scene.title_anchor})]);
+    "714";
+    scene.append_to_title("   ");
+    (await sleep(.1));
+    "716";
+    node_quantity = ρσ_interpolate_kwargs.call(this, winput, [ρσ_desugar_kwargs({prompt: "Nodes:", bind: change_number_of_nodes, type: "numeric", text: str(quantity_of_nodes), number: quantity_of_nodes, width: 35, pos: scene.title_anchor})]);
+    "718";
+    scene.append_to_title(" ");
+    "719";
+    reload_button = ρσ_interpolate_kwargs.call(this, button, [ρσ_desugar_kwargs({bind: reload_lattice, text: "Reload ", pos: scene.title_anchor})]);
+    "721";
+    scene.append_to_title(" ");
+    "722";
+    static_button = ρσ_interpolate_kwargs.call(this, button, [ρσ_desugar_kwargs({bind: static_render, text: "Render: Dynamic", pos: scene.title_anchor})]);
+    "724";
+    scene.append_to_title(" ");
+    "725";
+    caption_clear_button = ρσ_interpolate_kwargs.call(this, button, [ρσ_desugar_kwargs({bind: about_me_toggle, text: "Explanation", pos: scene.title_anchor, background: vec(.8, .8, .8)})]);
+    "727";
+    scene.append_to_title("    ");
+    "728";
+    spring_constant_text = ρσ_interpolate_kwargs.call(this, wtext, [ρσ_desugar_kwargs({text: "Spring Constant: "["+"](ρσ_str.format("{}", spring_constant))["+"](""), pos: scene.title_anchor})]);
+    "729";
+    spring_constant_slider = ρσ_interpolate_kwargs.call(this, slider, [ρσ_desugar_kwargs({bind: spring_constant_slide, min: 100, max: 1e4, step: 100, value: spring_constant, length: 150, pos: scene.title_anchor})]);
+    "732";
+    scene.append_to_title("|\n");
+    "733";
+    energy_conservation = ρσ_interpolate_kwargs.call(this, wtext, [ρσ_desugar_kwargs({text: "Energy Conservation: 100.00%", pos: scene.title_anchor})]);
+    "734";
+    energy_conservation_slider = ρσ_interpolate_kwargs.call(this, slider, [ρσ_desugar_kwargs({bind: energy_conservation_slide, min: 90, max: 100, step: .05, value: 100, length: 150, pos: scene.title_anchor})]);
+    "736";
+    scene.append_to_title("|        ");
+    "737";
+    traversal_method = ρσ_interpolate_kwargs.call(this, wtext, [ρσ_desugar_kwargs({text: "Graph Traversal Method: DFS = 0% | BFS = 100%", pos: scene.title_anchor})]);
+    "738";
+    traversal_type_slider = ρσ_interpolate_kwargs.call(this, slider, [ρσ_desugar_kwargs({bind: traversal_type_slide, min: 0, max: 100, step: 5, value: 100, length: 150, pos: scene.title_anchor})]);
+    "740";
+    scene.append_to_title("|        ");
+    "741";
+    generation_randomness = ρσ_interpolate_kwargs.call(this, wtext, [ρσ_desugar_kwargs({text: "Graph Randomness: 0%", pos: scene.title_anchor})]);
+    "742";
+    randomness_slider = ρσ_interpolate_kwargs.call(this, slider, [ρσ_desugar_kwargs({bind: randomness_slide, min: 0, max: 100, step: 1, value: 0, length: 150, pos: scene.title_anchor})]);
+    "743";
+    scene.append_to_title("|\n");
+    "753";
+    (await main());
+    "755";
+    async function main() {
+        var ρσ_ls, time, net_displacement, displacement_vector, idealized_neighbor_vector, ρσ_unpack, neighbor, edge, node, child;
+        "756";
+        "757";
+        time = 0;
+        "758";
+        while (engine_running) {
+            "759";
+            (await rate(update_rate));
+            "For each node, we calculate it's net change in velocity, by using Hooke's Law. For derivations, we begin with Hooke's Law,\n        F = -k * x = m * a = m * (Δv/Δt)\n        Δv = F * Δt / m\n        therefore,\n        Δv = -k * x * Δt / m\n        In our application, we absorb the negative sign into the x vector, flipping it.\n        ";
+            "768";
+            var ρσ_Iter13 = lattice.web;
+            ρσ_Iter13 = ((typeof ρσ_Iter13[Symbol.iterator] === "function") ? (ρσ_Iter13 instanceof Map ? ρσ_Iter13.keys() : ρσ_Iter13) : Object.keys(ρσ_Iter13));
+            for (var ρσ_Index13 of ρσ_Iter13) {
+                node = ρσ_Index13;
+                "769";
+                net_displacement = vec(0, 0, 0);
+                "771";
+                var ρσ_Iter14 = node.edges.items();
+                ρσ_Iter14 = ((typeof ρσ_Iter14[Symbol.iterator] === "function") ? (ρσ_Iter14 instanceof Map ? ρσ_Iter14.keys() : ρσ_Iter14) : Object.keys(ρσ_Iter14));
+                for (var ρσ_Index14 of ρσ_Iter14) {
+                    ρσ_unpack = ρσ_Index14;
+                    neighbor = ρσ_unpack[0];
+                    edge = ρσ_unpack[1];
+                    "772";
+                    displacement_vector = neighbor.pos["-"](1["*"](node.pos));
+                    "773";
+                    net_displacement=net_displacement["+"](displacement_vector["-"](1["*"](norm(displacement_vector))["*"](spacing)));
+                    "These next two lines serve as the components which prevent the lattice from collapsing in on itself. Without this\n                the bonds have no idea of what orientation they should favor. The most realistic model would be checking the bond\n                angle formed from on neighbor between the next and creating a counter force based off of this. But this requires\n                iterating through all of the neighbors in an n! or n^2 manner to determine who is the closest or the net result of\n                all of these non-initial bond angles. To save on performance I ignore this and implement and idealized solution.";
+                    "781";
+                    idealized_neighbor_vector = (ρσ_in(neighbor, node.children)) ? edge.initial_vec : 1["-u"]()["*"](edge.initial_vec);
+                    "782";
+                    neighbor.velocity=neighbor.velocity["+"](restoration_constant["*"](spring_constant)["*"](idealized_neighbor_vector["-"](1["*"](displacement_vector)))["*"](time_step)["/"](mass));
+                }
+                "784";
+                node.velocity=node.velocity["+"](spring_constant["*"](net_displacement)["*"](time_step)["/"](mass));
+                "785";
+                node.velocity=node.velocity["*"](conserved_energy);
+            }
+            "Update node positions by integrating the new velocity. Also update the edges.";
+            "788";
+            var ρσ_Iter15 = lattice.web;
+            ρσ_Iter15 = ((typeof ρσ_Iter15[Symbol.iterator] === "function") ? (ρσ_Iter15 instanceof Map ? ρσ_Iter15.keys() : ρσ_Iter15) : Object.keys(ρσ_Iter15));
+            for (var ρσ_Index15 of ρσ_Iter15) {
+                node = ρσ_Index15;
+                "789";
+                node.pos=node.pos["+"](node.velocity["*"](time_step));
+                "792";
+                var ρσ_Iter16 = node.children.items();
+                ρσ_Iter16 = ((typeof ρσ_Iter16[Symbol.iterator] === "function") ? (ρσ_Iter16 instanceof Map ? ρσ_Iter16.keys() : ρσ_Iter16) : Object.keys(ρσ_Iter16));
+                for (var ρσ_Index16 of ρσ_Iter16) {
+                    ρσ_unpack = ρσ_Index16;
+                    child = ρσ_unpack[0];
+                    edge = ρσ_unpack[1];
+                    "793";
+                    edge.pos = node.pos;
+                    "794";
+                    edge.axis = child.pos["-"](1["*"](node.pos));
+                }
+            }
+            "796";
+            time=time["+"](time_step);
+        }
+    };
+    if (!main.__module__) Object.defineProperties(main, {
+        __module__ : {value: null}
+    });
+
+};
+if (!__main__.__module__) Object.defineProperties(__main__, {
+    __module__ : {value: null}
+});
+
+;$(function(){ window.__context = { glowscript_container: $("#glowscript").removeAttr("id") }; __main__() })})()
+// END JAVASCRIPT
+
+//--><!]]></script>
+</div>
