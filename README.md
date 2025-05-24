@@ -4,6 +4,11 @@ A physics-based visualizer for atomic lattice vibrations. This interactive simul
 
 [**▶️ Click here to launch the simulation on GlowScript.org**](https://www.glowscript.org/#/user/X9Z3/folder/X9Z3Publications/program/Molecular-Lattice)
 
+
+![image](https://github.com/user-attachments/assets/6ac8e7dd-330b-43bf-b741-d14c40227bd1)
+
+
+
 ## 🧪 About the Simulation
 
 In the scene, a model simulates vibrations in a lattice of atoms. Several pre-designed lattice structures are available to choose from. Users can configure the number of simulated atoms—though higher node counts may impact performance.
