@@ -4,12 +4,13 @@ from random import randint
 """
 Created by Maximillian DeMarr.
 Future work ideas:
-- Explore 'nodictionary' for faster simulations
+- Explore 'nodictionary' for faster simulations (unsure if this even works?)
 - Devise structures for graphene nanotubules and Fullerenes
-- Devise more dynamic implementation for directions input/interpretation
+- Devise a more dynamic implementation for directions input/interpretation
     - Consider allowing users to enter in their own string of directions
     - Implement Einstein tiles and more advanced structures
-Last major update 2025.
+
+Last major update: 7/2/2025.
 """
 
 # ================================= Canvas =====================================
@@ -20,31 +21,40 @@ scene.bind('mouseup', release_mouse_1)
 
 
 about_me = """
-            In the scene to the left, a model simulates vibrations in a lattice. Choose from several  
-  pre-designed lattice types using the dropdown labeled <b>'Graphene'</b>. You can adjust the number of  
-  nodes (atoms) simulated, but higher values are more computationally expensive. Use <b>'Render: Static'</b>  
-  to visualize thousands of atoms without real-time physics. After any change, press <b>'Reload'</b> and  
-  <b>left-click anywhere</b> in the scene to restart the simulation.
+            In the scene to the left, a model simulates vibrations in a lattice.
+  You can move any atom by <b>left-clicking and dragging</b> it. After any change,
+  or if the lattice flies away, press <b>'Reload'</b> to restart the simulation.
+  Choose from several pre-designed lattice types using the dropdown labeled 
+  <b>'Graphene'</b>. You can adjust the number of atoms simulated, but higher values
+  are computationally expensive. Click <b>'Render: Dynamic'</b> to switch to 
+  static mode, allowing for smooth rendering of thousands of atoms without 
+  real-time physics. A Chrome browser seems to run best and anything beyond
+  500 atoms, I suggest using the static renderer.
 
-        The lattice starts at rest. You can <b>move any atom by left-clicking and dragging</b> it.  
-  If the vibrations grow too large, reduce energy conservation to cool the system. The default  
-  layout uses a breadth-first search (BFS) to form clustered networks. You can switch to a  
-  depth-first search (DFS) for long, tendril-like chains. A <b>randomness slider</b> adds variability  
-  to direction order. Use <b>middle mouse to zoom</b>, <b>right-click + drag to rotate</b>, and  
+            If the vibrations grow too large, reduce <b>energy conservation</b> to
+  cool the system. The default generation method uses a breadth-first search (BFS)
+  to form clustered networks. You can increase depth-first search (DFS) 
+  behavior for long, tendril-like chains. A <b>randomness slider</b> adds variability  
+  to direction order. <b>Zoom with scroll wheel</b>, <b>right-click + drag to rotate</b>, and  
   <b>Shift + left-click + drag to pan</b> the view.
 
-        \\(F = -k x_{dist},\\)     \\(F = ma\\)   \\(\\Rightarrow\\)   \\(a = \\dfrac{-k x_{dist}}{m}\\)  
-            \\(\\Delta v = a \\Delta t\\)   and   \\(\\Delta x = v \\Delta t\\)
 
-        Vibrations are computed using Hooke’s Law. The force between two atoms is based on  
-  the vector \\(x_{dist}\\), and integrated via Newton’s Second Law using a forward Euler method.  
-  To mimic sheer forces tangential to a spring, I am storing the original distance vector between
-  two nodes and comparing any changes in distance to this original value. This gives the network 
-  stiffness and avoids whole-lattice rotation (and internal collapse into a chaotic ball). This
-  simplification improves performance without major physical compromise.
+  ┌── Physics Discussion ──┐
 
-        I'm open to implementing new lattice types—reach out if you're interested! The current  
-  algorithm uses shared tileable vectors for all nodes, which complicates patterns like Einstein shapes.
+            Vibrations are computed using a standard Hooke's Law spring approximation.
+  The attracting or repelling force between two atoms is converted into an acceleration
+  using Newton's Second Law, which is then integrated via a forward Euler method to
+  update positions. To mimic shear forces tangential to a spring, I store the original
+  distance vector between two nodes and compare any changes in distance to this baseline.
+  This adds stiffness to the network and prevents whole-lattice rotation or collapse into
+  a chaotic ball. The simplification improves performance with minimal physical compromise. 
+
+            I'm open to implementing new lattice types—reach out if you're interested!
+  The current algorithm uses shared, tileable vectors for all nodes, which complicates 
+  patterns like Einstein shapes. I would also like to implement ABX₃ (perovskite) 
+  lattice structures, but that may require a complete overhaul of the physics engine.
+  Doing it justice might involve simulating electric force interactions, which would 
+  defeat the purpose of using spring approximations for performance gains.
 
         -<i>Created by Maximillian DeMarr</i>
 """
@@ -108,7 +118,9 @@ def lattice_directions(type):
         A = vec(1,0,0)
         B = vec(1/2, sqrt(3)/2, 0)
         C = vec(1/2, 1/(4*sqrt(3)), sqrt(3)/2)
-        return [A, B, C, -A, -B, -C]
+        D = vec(B.x, -B.y, B.z)
+        E = vec(-C.x, C.y, C.z)
+        return [A, B, C, D, E, -A, -B, -C, -D, -E]
     
     elif type == 'Grid 2D':
         return [vec(1,0,0), vec(0,1,0), vec(-1,0,0), vec(0,-1,0)]
@@ -147,6 +159,42 @@ def shuffle_list(directions):
         directions[i] = element_j
         directions[j] = element_i
     return directions
+
+
+def load_it():
+    """Reload the lattice and restart the main simulation loop."""
+    global lattice, engine_running, quantity_of_nodes, inert
+
+    reload_button.text = "Loading"
+    engine_running = False
+    sleep(0.05)
+
+    # Generate the new lattice nodes
+    lattice.generate_nodes(quantity_of_nodes)
+
+    # Set scene range based on new lattice span
+    scene.autoscale = False
+    scene.range = mag(lattice.web[-1].pos - lattice.web[0].pos) + 1
+
+    # Wait for lattice to finish loading
+    while lattice.is_loading:
+        rate(30)
+
+    # Reset simulation settings
+    print_options(clear=True)
+    engine_running = not inert
+
+    # Brief autoscale toggle to update visuals
+    scene.autoscale = True
+    sleep(0.01)
+    scene.autoscale = False
+
+    reload_button.text = "Reload"
+    main()
+
+
+
+
 
 
 
@@ -227,8 +275,8 @@ def change_number_of_nodes(evt):
         Displays a warning if the number of nodes exceeds 500, which may slow performance.
     """
     global frozen, quantity_of_nodes
-    if evt.number > 500 and not frozen:
-        print("Warning:\nMore than 500 nodes results in horrible performance. Consider toggling 'Static' and rerendering.")
+    if evt.number > 300 and not frozen:
+        print("For more nodes, consider toggling 'Static' and rerendering.")
     quantity_of_nodes = evt.number
 
 
@@ -244,109 +292,150 @@ def static_render(evt):
     """
     global inert
     inert = not inert
-    static_button.text = 'Render: Static' if inert else 'Render: Dynamic'
+    frozen_simulation_button.text = 'Render: Static' if inert else 'Render: Dynamic'
+
+
+def simulation_pause_run(evt):
+    """
+    Toggles the physics simulation between paused and running states.
+    
+    Updates both the simulation state and the triggering button's appearance
+    to provide clear visual feedback about the current mode.
+    
+    Args:
+        evt: The button event object triggering the toggle
+        
+    Global Dependencies:
+        paused (bool): Tracks simulation pause state
+        
+    Effects:
+        - Toggles global paused state
+        - Updates button text and color (red when paused)
+    """
+    global paused
+    paused = not paused
+    if paused:
+        evt.text = "Paused"
+        evt.textcolor = color.red
+    else:
+        evt.text = "Running"
+        evt.textcolor = color.black
 
 
 def about_me_toggle(evt):
     """
-    Toggles the display of the 'about me' section and adjusts the scene appearance.
-
-    Args:
-        evt: An event object that triggers the toggle.
+    Toggles the display of an informational 'About Me' section with dynamic layout adjustments.
     
-    Notes:
-        Changes the button background color and scene width. If the background is light grey, it displays a caption 
-        for the user and narrows the scene width. Otherwise, it shows the full scene and resets the background.
+    This function manages:
+    - Toggling between full scene view and about me view
+    - Adjusting scene width based on current display mode
+    - Updating button visual feedback
+    - Rendering LaTeX-formatted content when displayed
+    
+    Args:
+        evt: Event object triggering the toggle
+        
+    Global Dependencies:
+        about_me (str): Content to display in the about me section
+        caption_enabled (bool): Tracks if about me content is currently displayed
+        about_me_button (button): Reference to the UI button triggering this function
+        graphs_enabled (bool): Tracks if graph visualization is active
+        
+    Effects:
+        - Modifies scene width and caption content
+        - Updates button background color as visual feedback
+        - Triggers MathJax rendering for LaTeX content
     """
-    global about_me
-    if evt.background.equals(vec(0.8,0.8,0.8)):
-        evt.background = color.white
+    global about_me, caption_enabled
+    caption_enabled = not caption_enabled
+    if not caption_enabled:
+        evt.text = "Explain me!"
+        scene.width = 1000
         scene.caption = ''
-        scene.width=1300
     else:
-        evt.background = vec(0.8,0.8,0.8)
+        evt.text = "Hide words "
         scene.width = 600
         scene.caption = about_me
-        MathJax.Hub.Queue(["Typeset", MathJax.Hub, scene.caption])  # LaTeX formatting
+        MathJax.Hub.Queue(["Typeset", MathJax.Hub, scene.caption])
 
 
-def spring_constant_slide(slide):
+def change_spring_constant(evt):
     """
     Updates the spring constant based on the slide value.
     
     Args:
-        slide: A slide object containing the new spring constant.
+        evt: A slide object containing the new spring constant.
         
     Notes:
         The spring constant text is updated to reflect the current spring constant. The value is stored in a global variable.
     """
     global spring_constant
-    spring_constant_text.text = f'Spring Constant: {slide.value:5.f}'
-    spring_constant = slide.value
+    if evt.obj_type == 'slider':
+        evt.value_winput_obj.text = evt.value
+        spring_constant = evt.value
+    elif evt.obj_type == 'winput':
+        spring_constant = evt.text
 
 
-def energy_conservation_slide(slide):
+def change_energy_conservation(evt):
     """
     Updates the energy conservation percentage based on the slide value.
 
     Args:
-        slide: A slide object containing the new energy conservation percentage.
+        evt: A slide object containing the new energy conservation percentage.
     
     Notes:
         The energy conservation text is updated to reflect the percentage. The value is stored in a global variable.
     """
     global conserved_energy
-    energy_conservation.text = f'Energy Conservation: {slide.value:3.2f}%'
-    conserved_energy = slide.value/100
+    if evt.obj_type == 'slider':
+        evt.value_winput_obj.text = evt.value
+        conserved_energy = evt.value
+    elif evt.obj_type == 'winput':
+        conserved_energy = evt.text
     
 
-def traversal_type_slide(slide):
+def change_traversal_type(evt):
     """
     Adjusts the graph traversal method based on the slide value.
 
     Args:
-        slide: A slide object containing the new value for traversal method selection (DFS and BFS percentage).
+        evt: A slide object containing the new value for traversal method selection (DFS and BFS percentage).
     
     Notes:
         The traversal method text is updated, and the graph traversal method modifier is adjusted.
     """
     global lattice
-    traversal_method.text = f'Graph Traversal Method: DFS = {100-slide.value:3.0f}% | BFS = {slide.value:3.0f}%'
-    lattice.generation_modifier = slide.value/100
+    evt.title_wtext_obj.text = f'<b>Generation Method: <font color="green">DFS = {100-evt.value}%</font> | <font color="blue">BFS = {evt.value}%</font></b>'
+    lattice.generation_modifier = evt.value/100
 
 
-def randomness_slide(slide):
+def change_generation_randomness(evt):
     """
     Updates the randomness of the lattice generation based on the slide value.
 
     Args:
-        slide: A slide object containing the new value for graph randomness.
+        evt: A slide object containing the new value for graph randomness.
     
     Notes:
         The randomness text is updated to reflect the percentage. The lattice's shuffle modifier is adjusted.
     """
     global lattice
-    generation_randomness.text = f'Graph Randomness: {slide.value:3.0f}%'
-    lattice.shuffle_modifier = slide.value
+    if evt.obj_type == 'slider':
+        evt.value_winput_obj.text = evt.value
+        lattice.shuffle_modifier = evt.value
+    elif evt.obj_type == 'winput':
+        lattice.shuffle_modifier = evt.text
 
 
 def reload_lattice(evt):
     """
-    Reloads the lattice if not already loading. Prevents multiple reloads during a single operation.
+    Initiates lattice reload. Mostly deprecated.
 
     Args:
         evt: An event object that triggers the lattice reloading action.
-    
-    Notes:
-        If the lattice is already loading or queued, it will print a message asking the user to wait.
     """
-    global loading
-    if not loading:
-        loading = True
-        load_it()
-    else:
-        print("Please wait for scene to reload (need to click anywhere in scene).")
-
+    load_it()
 
 
 
@@ -370,11 +459,14 @@ class Node:
         obj.children (dict): A dictionary of edges (key: child_node, value: edge) 
             in which the main node is the owner of.
     """
-    def __init__(self, position):
-        self.obj = simple_sphere(pos=position, color=color.red, radius=atom_radius)
+    def __init__(self, position=vec(0,0,0), node_color=color.red, node_radius=None):
+        if node_radius == None:
+            node_radius = atom_radius
+        self.obj = simple_sphere(pos=position, color=node_color, radius=node_radius)
         self.obj.velocity = vec(0,0,0)
         self.obj.edges = {}
         self.obj.children = {}
+        self.obj.neighbor_interactions = []
 
 
 class Edge:
@@ -394,10 +486,9 @@ class Edge:
         if edge:
             edge.pos = node_1.pos
             edge.axis = node_2.pos - node_1.pos
-            edge.initial_vec = node_2.pos - node_1.pos
             edge.visible = True
         else:
-            edge = cylinder(pos=node_1.pos, axis=node_2.pos-node_1.pos, color=color.white, radius=node_1.radius/4, initial_vec=node_2.pos-node_1.pos)
+            edge = cylinder(pos=node_1.pos, axis=node_2.pos-node_1.pos, color=color.white, radius=atom_radius/4)
         
         node_1.edges[node_2] = edge
         node_1.children[node_2] = edge
@@ -504,6 +595,7 @@ class Lattice:
         self.directions = [axis * spacing for axis in directions]
         self.generation_modifier = generation_modifier
         self.shuffle_modifier = shuffle_modifier
+        self.is_loading = False  # Used to check when the loading process is done
         self.origin = None
         self.dead_edges = []
         self.web = []
@@ -538,13 +630,14 @@ class Lattice:
         Args:
             n (int): The number of nodes to generate in the lattice.
         """
+        self.is_loading = True
         nodes_to_recycle = self.__splice_web(n) if len(self.web) > 0 else []
         queue = Queue(self.generation_modifier)
         visited = {}
 
         # Initialize the first node at the origin
-        if nodes_to_recycle == []:
-            node = Node(vec(0,0,0)).obj
+        if len(nodes_to_recycle) == 0:
+            node = Node(position=vec(0,0,0)).obj
         else:
             node = nodes_to_recycle.pop(0)
             self.__reset_node(node, vec(0,0,0))
@@ -552,11 +645,11 @@ class Lattice:
         self.origin = node
         self.add_node(node)
         queue.enqueue((node, 1))  # (Node, flip Boolean) flip boolean is used to handle lattice asymmetry
-        visited[str(node.pos)] = node
+        visited[str(node.pos)] = node  # Using the position as the key to check for later
         
         while (not queue.is_empty()) and len(self.web) < n:
             node, flip = queue.dequeue()
-            
+        
             # Optionally shuffle the directions
             if self.shuffle_modifier and random() < self.shuffle_modifier:
                 self.directions = shuffle_list(self.directions)
@@ -569,7 +662,7 @@ class Lattice:
                 then we check to add a bond between the nodes. """
                 if str(blurred_position) not in visited:
                     if nodes_to_recycle == []:
-                        next_node = Node(next_position).obj
+                        next_node = Node(position=next_position).obj
                     else:
                         next_node = nodes_to_recycle.pop(0)
                         self.__reset_node(next_node, next_position)
@@ -582,6 +675,10 @@ class Lattice:
                         break
                 elif visited.get(str(blurred_position)) not in node.edges:
                     self.connect_nodes(node, visited.get(str(blurred_position)))
+
+        self.__fill_angular_rigidity()
+        self.is_loading = False
+        
     
     def __splice_web(self, n):
         """
@@ -639,6 +736,48 @@ class Lattice:
             self.dead_edges.append(edge)
         node.edges = {}
         node.children = {}
+        node.neighbor_interactions = []
+    
+    def __fill_angular_rigidity(self):
+        """
+        For each node in the lattice, this method initializes 'neighbor_interactions'
+        that represent second-degree (angular) connections between pairs of neighbors.
+
+        These virtual "springs" (edges) are added between each pair of neighbors of the node,
+        effectively introducing angular rigidity (resistance to bending) to the lattice.
+
+        Each entry in node.neighbor_interactions is a list:
+            [[neighbor1, neighbor2], rest_length]
+        where rest_length is the initial distance between the two neighbor nodes.
+
+        This is useful for maintaining lattice shape under deformation.
+        """
+        for node in self.web:
+            if len(node.edges) < 2:
+                # Skip nodes with fewer than two neighbors — no angular interaction possible
+                continue
+
+            # Get a list of this node's neighbors
+            neighbors = list(node.edges.keys())
+            num_neighbors = len(neighbors)
+
+            # Initialize the list to store angular (second-degree) interactions
+            node.neighbor_interactions = []
+
+            for i in range(num_neighbors):
+                # Form a "spring" between neighbor i and neighbor i+1 (with wrap-around)
+                neighbor1 = neighbors[i]
+                neighbor2 = neighbors[(i + 1) % num_neighbors]
+                neighbor3 = neighbors[(i - 1) % num_neighbors]
+
+                # Compute initial (rest) length of the virtual spring
+                rest_length1 = mag(neighbor1.pos - neighbor2.pos)
+                rest_length2 = mag(neighbor2.pos - neighbor3.pos)
+
+                # Append the interaction
+                node.neighbor_interactions.append([[neighbor1, neighbor2], rest_length1])
+                node.neighbor_interactions.append([[neighbor2, neighbor3], rest_length2])
+
     
     def __str__(self):
         """
@@ -650,27 +789,6 @@ class Lattice:
         return f"HexGrid with {len(self.web)} nodes."
 
 
-def load_it():
-    """This is the method to reload the lattice and restart the main() method."""
-    global lattice, engine_running, quantity_of_nodes, inert, loading
-    
-    reload_button.text = "Loading"
-    engine_running = False
-    sleep(0.05)
-    
-    lattice.generate_nodes(quantity_of_nodes)
-    print_options(clear=True)
-    reload_button.text = "Loaded "
-    print("Waiting for user to click anywhere in scene...")
-    scene.waitfor('click')
-    
-    print_options(clear=True)
-    print("Running and clicked :)")
-    engine_running = not inert
-    sleep(0.01)
-    loading = False
-    reload_button.text = "Reload "
-    main()
 
 
 
@@ -678,70 +796,142 @@ def load_it():
 
 
 
-# ================================ Globals =====================================
+# ============================== Global Settings ===============================
 
-mass = 1
-spacing = 1
-atom_radius = 0.25
-conserved_energy = 1
-spring_constant = 1000
-restoration_constant = 0.3
+# --- Physical Parameters ---
+mass                   = 1
+spacing                = 1
+atom_radius            = 0.25
+spring_constant        = 1000
+restoration_constant   = 0.3        # A value used for second degree neighbors
+conserved_energy       = 85
 
-lattice_type = "Graphene"
-quantity_of_nodes = 40
-time_step = 0.0005
-update_rate = 1/time_step
+# --- Simulation Settings ---
+lattice_type           = "Graphene"
+quantity_of_nodes      = 40
+time_step              = 0.0005
+update_rate            = int(1 / time_step)
 
-bfs_like = 1
-shuffling_percent = 0
+# --- Lattice Generation Controls ---
+bfs_like               = 1          # 1 = BFS, 0 = DFS
+shuffling_percent      = 0          # Directional randomness (0–100)
 
-mouse_1_up = True
-engine_running = True
-inert = False
-loading = False
+# --- Engine State Flags ---
+mouse_1_up             = True
+engine_running         = True
+inert                  = False
+loading                = False
+caption_enabled        = True
 
-lattice = Lattice()
-lattice.generate_nodes(quantity_of_nodes)
-
-
-
-
-
-
-
-# =============================== Widgets/Text =================================
-
-lattice_type_menu = menu(bind=lattice_selection, choices=['Graphene', 'Diamond', 'Triangular 2D', 'Triangular 3D', 'Grid 2D', 'Grid 3D'], selected=lattice_type, index=0, pos=scene.title_anchor)
-scene.append_to_title('   ')
-
-node_quantity = winput(prompt='Nodes:', bind=change_number_of_nodes, type='numeric', text=str(quantity_of_nodes), number=quantity_of_nodes, width=35, pos=scene.title_anchor)
-
-scene.append_to_title(' ')
-reload_button = button(bind=reload_lattice, text='Reload ', pos=scene.title_anchor)
-
-scene.append_to_title(' ')
-static_button = button(bind=static_render, text='Render: Dynamic', pos=scene.title_anchor)
-
-scene.append_to_title(' ')
-caption_clear_button = button(bind=about_me_toggle, text='Explanation', pos=scene.title_anchor, background=vec(0.8,0.8,0.8))
-
-scene.append_to_title('    ')
-spring_constant_text = wtext(text=f'Spring Constant: {spring_constant}', pos=scene.title_anchor)
-spring_constant_slider = slider(bind=spring_constant_slide, min=100, max=10000, step=100, value=spring_constant, length=150, pos=scene.title_anchor)
+# --- Main Lattice Object ---
+lattice                = Lattice()
 
 
-scene.append_to_title('|\n')
-energy_conservation = wtext(text='Energy Conservation: 100.00%', pos=scene.title_anchor)
-energy_conservation_slider = slider(bind=energy_conservation_slide, min=90, max=100, step=0.05, value=100, length=150, pos=scene.title_anchor)
 
-scene.append_to_title('|        ')
-traversal_method = wtext(text='Graph Traversal Method: DFS = 0% | BFS = 100%', pos=scene.title_anchor)
-traversal_type_slider = slider(bind=traversal_type_slide, min=0, max=100, step=5, value=100, length=150, pos=scene.title_anchor)
 
-scene.append_to_title('|        ')
-generation_randomness = wtext(text='Graph Randomness: 0%', pos=scene.title_anchor)
-randomness_slider = slider(bind=randomness_slide,  min=0, max=100, step=1, value=0, length=150, pos=scene.title_anchor)
-scene.append_to_title('|\n')
+# =============================== Widgets/Text ================================
+
+lattice_type_menu = menu(
+    choices=['Graphene', 'Diamond', 'Triangular 2D', 'Triangular 3D', 'Grid 2D', 'Grid 3D'],
+    title_wtext_obj=wtext(text='<b>Model:</b> ', pos=scene.title_anchor),
+    bind=lattice_selection, selected=lattice_type, index=0,
+    pos=scene.title_anchor, suffix_wtext_obj=None
+)
+lattice_type_menu.suffix_wtext_obj = wtext(text='  ', pos=scene.title_anchor)
+
+node_quantity_winput = winput(
+    prompt='<b>Nodes:</b>', bind=change_number_of_nodes, type='numeric',
+    text=str(quantity_of_nodes), number=quantity_of_nodes, width=35,
+    pos=scene.title_anchor
+)
+node_quantity_winput.suffix_wtext_obj = wtext(text=' ', pos=scene.title_anchor)
+
+reload_button = button(
+    text='Reload', pos=scene.title_anchor,
+    bind=reload_lattice
+)
+reload_button.suffix_wtext_obj = wtext(text=' ', pos=scene.title_anchor)
+
+run_pause_button = button(  # ▣/▶ Toggles simulation execution
+    text="Running", pos=scene.title_anchor,
+    bind=simulation_pause_run
+)
+run_pause_button.suffix_wtext_obj = wtext(text=' ', pos=scene.title_anchor)
+
+frozen_simulation_button = button(
+    text='Render: Dynamic', pos=scene.title_anchor,
+    bind=static_render
+)
+frozen_simulation_button.suffix_wtext_obj = wtext(text=' ', pos=scene.title_anchor)
+
+about_me_button = button(  # 🔍 Toggles descriptive text
+    text='Hide words ', pos=scene.title_anchor,
+    bind=about_me_toggle
+)
+
+spring_constant_slider = slider(
+    min=100, max=10000, step=100, value=spring_constant,
+    length=150, pos=scene.title_anchor,
+    bind=change_spring_constant,
+    title_wtext_obj=wtext(text=f'\n<b>Spring Constant:</b>', pos=scene.title_anchor),
+    obj_type='slider'
+)
+spring_constant_slider.value_winput_obj = winput(
+    type='numeric', width=40, height=20,
+    text=spring_constant_slider.value,
+    pos=scene.title_anchor,
+    bind=change_spring_constant,
+    obj_type='winput'
+)
+spring_constant_slider.suffix_wtext_obj = wtext(text=' ', pos=scene.title_anchor)
+
+energy_conservation_slider = slider(
+    min=0, max=100, step=0.5, value=conserved_energy,
+    length=150, pos=scene.title_anchor,
+    bind=change_energy_conservation,
+    title_wtext_obj=wtext(text=f'<b>Energy Conservation:</b>', pos=scene.title_anchor),
+    obj_type='slider'
+)
+energy_conservation_slider.value_winput_obj = winput(
+    type='numeric', width=30, height=20,
+    text=energy_conservation_slider.value,
+    pos=scene.title_anchor,
+    bind=change_energy_conservation,
+    obj_type='winput'
+)
+energy_conservation_slider.suffix_wtext_obj = wtext(text='%\n', pos=scene.title_anchor)
+
+traversal_type_slider = slider(
+    min=0, max=100, step=5, value=100,
+    length=150, pos=scene.title_anchor,
+    bind=change_traversal_type,
+    title_wtext_obj=wtext(
+        text=(
+            '<b>Generation Method: '
+            '<font color="green">DFS = 0%</font> | '
+            '<font color="blue">BFS = 100%</font></b>'
+        ),
+        pos=scene.title_anchor
+    ),
+    obj_type='slider'
+)
+traversal_type_slider.suffix_wtext_obj = wtext(text='     ', pos=scene.title_anchor)
+
+randomness_slider = slider(
+    min=0, max=100, step=1, value=0,
+    length=150, pos=scene.title_anchor,
+    bind=change_generation_randomness,
+    title_wtext_obj=wtext(text=f'<b>Generation Randomness:</b>', pos=scene.title_anchor),
+    obj_type='slider'
+)
+randomness_slider.value_winput_obj = winput(
+    type='numeric', width=30, height=20,
+    text=randomness_slider.value,
+    pos=scene.title_anchor,
+    bind=change_generation_randomness,
+    obj_type='winput'
+)
+randomness_slider.suffix_wtext_obj = wtext(text='%\n', pos=scene.title_anchor)
 
 
 
@@ -751,51 +941,78 @@ scene.append_to_title('|\n')
 
 # ================================== Main ======================================
 
-main()
-
 def main():
+    """
+    Runs the core physics simulation loop using Hooke’s Law and explicit Euler integration.
+
+    Forces are computed as:
+        F = -k * (x - x₀)
+    Where:
+        - x is the current displacement vector between nodes,
+        - x₀ is the original rest length vector (stored in edge.initial_vec),
+        - k is the spring constant.
+
+    Acceleration is then calculated using Newton’s second law:
+        F = m * a  =>  a = F / m
+
+    Velocity is updated via:
+        v += a * Δt  =>  v += (F * Δt) / m
+
+    Position is integrated using forward Euler:
+        x += v * Δt
+
+    A restoring force based on the original bond vector helps prevent collapse by adding angular stiffness,
+    which would otherwise require complex, angle-based constraints.
+    """
     global lattice, time_step, engine_running, conserved_energy, spring_constant
+    global paused
+
     time = 0
+
     while engine_running:
         rate(update_rate)
-        
-        """For each node, we calculate it's net change in velocity, by using Hooke's Law. For derivations, we begin with Hooke's Law,
-        F = -k * x = m * a = m * (Δv/Δt)
-        Δv = F * Δt / m
-        therefore,
-        Δv = -k * x * Δt / m
-        In our application, we absorb the negative sign into the x vector, flipping it.
-        """
+
+        if paused:
+            continue  # Skip physics update if simulation is paused
+
+        # ------------------- Compute net forces for each node -------------------
         for node in lattice.web:
-            net_displacement = vec(0,0,0)
-            
-            for neighbor, edge in node.edges.items():
-                displacement_vector = neighbor.pos - node.pos
-                net_displacement += displacement_vector - norm(displacement_vector) * spacing
+            net_displacement = vec(0, 0, 0)
+
+            for neighbor in node.edges.keys():
+                current_distance = neighbor.pos - node.pos
+                net_displacement += current_distance - norm(current_distance) * spacing
+
+            # Evaluate second-degree neighbor distances
+            for nodes, equilibrium_distance in node.neighbor_interactions:
+                node_1, node_2 = nodes[0], nodes[1]
                 
-                """These next two lines serve as the components which prevent the lattice from collapsing in on itself. Without this
-                the bonds have no idea of what orientation they should favor. The most realistic model would be checking the bond
-                angle formed from on neighbor between the next and creating a counter force based off of this. But this requires
-                iterating through all of the neighbors in an n! or n^2 manner to determine who is the closest or the net result of
-                all of these non-initial bond angles. To save on performance I ignore this and implement and idealized solution."""
-                # Give the neighbor a restoring force to its ideal relative position.
-                idealized_neighbor_vector = edge.initial_vec if neighbor in node.children else -edge.initial_vec
-                neighbor.velocity += restoration_constant * spring_constant * (idealized_neighbor_vector - displacement_vector) * time_step / mass
-            
+                current_distance = node_1.pos - node_2.pos
+                node_1.velocity -= restoration_constant * spring_constant * (current_distance - norm(current_distance) * equilibrium_distance) * time_step / mass
+                node_2.velocity += restoration_constant * spring_constant * (current_distance - norm(current_distance) * equilibrium_distance) * time_step / mass
+
+            # Apply total spring force to node
             node.velocity += spring_constant * net_displacement * time_step / mass
-            node.velocity *= conserved_energy
-            
-        """Update node positions by integrating the new velocity. Also update the edges."""
+
+        # ------------------- Integrate velocity and update positions -------------------
         for node in lattice.web:
+            # Apply artificial damping based on energy conservation
+            damping = ((100 - conserved_energy) / 100) ** 4
+            node.velocity *= (1 - damping)
+
+            # Forward Euler integration
             node.pos += node.velocity * time_step
-            
-            # This update order isn't 100% correct but it is close enough and saves performance.
+
+            # Update edge visuals (only from parent to child)
             for child, edge in node.children.items():
-                    edge.pos = node.pos
-                    edge.axis = child.pos - node.pos
-                    
+                edge.pos = node.pos
+                edge.axis = child.pos - node.pos
+
         time += time_step
 
 
+# Bootstraps the simulation on load
+load_it()
+main()
 
-# End of program
+# ================================= End of Program ==============================
